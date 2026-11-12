@@ -194,8 +194,8 @@ async function fetchKLineData() {
   if (currentPeriod === '60m') scale = 60;
   if (currentPeriod === '1d') scale = 240;
 
-  const url = `/api/kline?symbol=${code}&scale=${scale}`;
-  
+  //const url = `/api/kline?symbol=${code}&scale=${scale}`;
+  const url = `http://192.168.1.238/api/kline?symbol=${code}&scale=${scale}`;  //github
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -305,7 +305,11 @@ function toggleStock() {
   }
 }
 
-function setAutoMode() { isAutoMode = true; fetch('/setAuto').then(() => fetchStatus()); }
+function setAutoMode() { isAutoMode = true; 
+//fetch('/setAuto').then(() => fetchStatus()); 
+fetch('http://192.168.1.238/setAuto').then(() => fetchStatus()); 
+
+}
 function setRGB(r, g, b) {
   isAutoMode = false;
   document.getElementById('ui-slider0').value = r; document.getElementById('ui-slider1').value = g; document.getElementById('ui-slider2').value = b;
@@ -318,13 +322,15 @@ function onSlider() {
   let g = document.getElementById('ui-slider1').value;
   let b = document.getElementById('ui-slider2').value;
   document.getElementById('ui-v0').innerText = r; document.getElementById('ui-v1').innerText = g; document.getElementById('ui-v2').innerText = b;
-  fetch('/rgb?r=' + r + '&g=' + g + '&b=' + b);
+  //fetch('/rgb?r=' + r + '&g=' + g + '&b=' + b);
+  fetch('http://192.168.1.238/rgb?r=' + r + '&g=' + g + '&b=' + b);
 }
 function changeStock(idx) {
   isAutoMode = true;
   document.getElementById('ui-stockPrice').innerText = '切换中...';
   document.getElementById('ui-stockTip').innerText = '拉取新数据...';
-  fetch('/setStock?idx=' + idx).then(() => { fetchStatus(); updateStockChart(); });
+  //fetch('/setStock?idx=' + idx).then(() => { fetchStatus(); updateStockChart(); });
+fetch('http://192.168.1.238/setStock/setStock?idx=' + idx).then(() => { fetchStatus(); updateStockChart(); });
 }
 function toggleStockChart() {
   let container = document.getElementById('stockChartContainer');
@@ -344,11 +350,19 @@ function updateStockChart() {
   let imgUrl = "https://image.sinajs.cn/newchart/" + chartType + "/n/" + code + ".gif?t=" + new Date().getTime();
   document.getElementById('ui-stockChartImg').src = imgUrl;
 }
-function toggleEffect() { isEffectMode = !isEffectMode; fetch('/setEffect?state=' + (isEffectMode ? 1 : 0)).then(() => fetchStatus()); }
+function toggleEffect() { isEffectMode = !isEffectMode; 
+//fetch('/setEffect?state=' + (isEffectMode ? 1 : 0)).then(() => fetchStatus()); 
+fetch('http://192.168.1.238/setEffect?state=' + (isEffectMode ? 1 : 0)).then(() => fetchStatus()); 
+
+}
 function setTimer() {
   let t = document.getElementById('ui-timer').value;
   if (!t) return;
-  fetch('/setTimer?time=' + t).then(() => { isTimerFocused = false; fetchStatus(); });
+  //fetch('/setTimer?time=' + t).then(() => { 
+  fetch('http://192.168.1.238/setTimer?time=' + t).then(() => { 
+
+    isTimerFocused = false; fetchStatus(); 
+  });
 }
 
 
@@ -370,7 +384,7 @@ function countVersionClicks() {
 
 // 核心拉取数据
 function fetchStatus() {
-  fetch('/status')
+  fetch('http://192.168.1.238/status')//fetch('/status')
     .then(r => r.json())
     .then(d => {
       if (d.stockCodes && document.getElementById('ui-select').options.length === 0) {
