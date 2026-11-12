@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang='zh'>
+<head>
+
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>ESP32S3 控制台</title>
+<link rel='stylesheet' href='/style.css'>
+<!-- KLineChart 样式 -->
+
+<!--  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts@9.8.10/dist/klinecharts.min.css">  -->
+
+</head>
+<body>
+<h1>🌤 ESP32S3 天气 + 灯</h1>
+
+<!-- 天气卡片 -->
+<div class='card'>
+  <h2>当前天气 · 武汉</h2>
+  <div class='big-temp' id='ui-temp'>--</div>
+  <div class='big-desc' id='ui-desc'>--</div>
+  <div class='row'><span>湿度</span><span id='ui-hum'>--</span></div>
+  <div class='row'><span>风速</span><span id='ui-wind'>--</span></div>
+  <div class='row'><span>云量</span><span id='ui-cloud'>--</span></div>
+  <div class='row'><span>气压</span><span id='ui-press'>--</span></div>
+  <div class='row'><span>气压趋势</span><span id='ui-pressTrend'>--</span></div>
+  <div class='row'><span>更新时间</span><span id='ui-updateTime'>--</span></div>
+</div>
+
+<!-- 温度曲线 -->
+<div class='card'>
+  <h2>今日温度走势 (24小时)</h2>
+  <div id="tempChart" style="width: 100%; height: 200px;"></div>
+</div>
+
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<!-- 仪表盘 -->
+<div class='card'>
+  <h2>天气指数 · 极速仪表盘</h2>
+  <div id="gaugeChart" style="width: 100%; height: 260px;"></div>
+  <div class='level' id='ui-fishLevel' style="text-align:center; font-size:16px; margin-top:-10px;">--</div>
+  <div class='tip' id='ui-advice' style="text-align:center;">等待数据...</div>
+</div>
+
+<!-- 灯光控制卡片 -->
+<div class='card'>
+  <h2>灯光控制</h2>
+  <input type='color' id='color' value='#000000' style='width:100%;height:50px;border:0;border-radius:8px;' onchange='setColor(this.value)'>
+  <div class='presets'>
+    <div class='preset' style='background:#ffffff' onclick='setRGB(255,255,255)'></div>
+    <div class='preset' style='background:#ff0000' onclick='setRGB(255,0,0)'></div>
+    <div class='preset' style='background:#00ff00' onclick='setRGB(0,255,0)'></div>
+    <div class='preset' style='background:#0000ff' onclick='setRGB(0,0,255)'></div>
+    <div class='preset' style='background:#000000' onclick='setRGB(0,0,0)'></div>
+    <div class='preset' style='background:#ffff00' onclick='setRGB(255,255,0)'></div>
+    <div class='preset' style='background:#ff00ff' onclick='setRGB(255,0,255)'></div>
+    <div class='preset' style='background:#ff8800' onclick='setRGB(255,136,0)'></div>
+    <div class='preset' style='background:#00ffff' onclick='setRGB(0,255,255)'></div>
+    <div class='preset' style='background:#ff69b4' onclick='setRGB(255,105,180)'></div>
+  </div>
+  <div class='slider-row'><span>红</span><input type='range' min='0' max='255' value='0' id='ui-slider0' oninput='onSlider()'><span id='ui-v0'>0</span></div>
+  <div class='slider-row'><span>绿</span><input type='range' min='0' max='255' value='0' id='ui-slider1' oninput='onSlider()'><span id='ui-v1'>0</span></div>
+  <div class='slider-row'><span>蓝</span><input type='range' min='0' max='255' value='0' id='ui-slider2' oninput='onSlider()'><span id='ui-v2'>0</span></div>
+  <div style="margin-top: 20px; border-top: 1px solid #374151; padding-top: 15px;">
+    <h3 style="font-size: 14px; color: #93c5fd; margin-bottom: 10px;">定时关灯设置</h3>
+    <div style="display: flex; gap: 10px;">
+      <input type="time" id="ui-timer" style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: #374151; color: white;">
+      <button class="btn-auto" style="width: auto; margin: 0; padding: 0 15px;" onclick="setTimer()">保存</button>
+    </div>
+    <div class="tip" id="ui-timerTip" style="margin-top: 8px;">当前未设置定时</div>
+  </div>
+  <button class='btn-auto' style='background:#8b5cf6; margin-top:15px;' id='ui-btnEffect' onclick='toggleEffect()'>开启幻彩呼吸灯</button>
+</div>
+
+<button class='btn-auto' onclick='toggleStock()' id='btnToggleStock' style='margin-bottom:14px;'>隐藏监控</button>
+
+<!-- 原有的监控卡片 -->
+<div class='card' id='stockCard'>
+  <h2>监控 · 匿名模式</h2>
+  <select class='select-box' id='ui-select' onchange='changeStock(this.value)'></select>
+  <div class='stock-price flat' id='ui-stockPrice'>--</div>
+  <div class='tip' id='ui-stockTip'>获取中...</div>
+  <button class='btn-auto' id='ui-btnAuto' onclick='setAutoMode()'>恢复自动联动</button>
+  <button class='btn-auto' style='background:#374151; margin-top:10px;' onclick='toggleStockChart()' id='btnStockChart'>显示原版图</button>
+  <div id='stockChartContainer' style='display:none; margin-top:15px; background:#fff; border-radius:8px; overflow:hidden;'>
+    <div style="padding: 8px; background: #1f2937; text-align: center;">
+      <select id="ui-chartType" onchange="updateStockChart()" style="padding: 4px 8px; border-radius: 6px; background: #374151; color: white; border: 1px solid #4b5563;">
+        <option value="min">分时图</option> 
+        <option value="daily">日图</option>
+      </select>
+    </div>
+    <img id='ui-stockChartImg' src='' style='width:100%; height:auto; display:block;' alt="分时图加载中...">
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- ⭐️ 专业级分析栏目块 ⭐️ -->
+<!-- ========================================== -->
+<div class='card' id="proKlineCard">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <h2 style="margin: 0;">专业分析</h2>
+    <button onclick='toggleProKline()' id='btnToggleProKline' style='padding: 4px 10px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; background: #3b82f6; color: white; transition: 0.2s;'>隐藏</button>
+  </div>
+
+  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <select class='select-box' id='pro-stock-select' onchange='fetchKLineData()' style="margin-bottom:0;"></select>
+  </div>
+  
+  <!-- 图表操作工具栏 -->
+  <div class="chart-toolbar">
+    <button class="btn-chart active" onclick="changePeriod('5m', this)">5分</button>
+    <button class="btn-chart" onclick="changePeriod('15m', this)">15分</button>
+    <button class="btn-chart" onclick="changePeriod('30m', this)">30分</button>
+    <button class="btn-chart" onclick="changePeriod('60m', this)">60分</button>
+    <button class="btn-chart" onclick="changePeriod('1d', this)">日线</button>
+    <span class="divider"></span>
+    <button class="btn-chart active" onclick="changeIndicator('MACD', this)">MACD</button>
+    <button class="btn-chart" onclick="changeIndicator('KDJ', this)">KDJ</button>
+    <button class="btn-chart" onclick="changeIndicator('RSI', this)">RSI</button>
+  </div>
+  
+  <!-- 渲染容器 -->
+  <div id="pro-kline-container" style="width:100%; height: 350px; background: #1f2937;"></div>
+</div>
+ 
+<!-- 引入本地 JS 文件 -->
+<!--  <script src="/klinecharts.min.js"></script>   -->
+<!--  <script src='/script.js'></script>            -->
+
+<!-- 引入外网 KLineChart 核心库 -->
+<script src="https://cdn.jsdelivr.net/npm/klinecharts@9.8.10/dist/umd/klinecharts.min.js"></script>
+<script src='/script.js'></script>
+
+
+<!-- 放在页面最底部的卡片，显示版本号和 OTA-4 按钮 -->
+<div class='card'>
+  <h2>系统设置</h2>
+  <div style="text-align:center; margin-bottom: 15px;">
+    <span id="ui-version" style="color: #6b7280; font-size: 14px;">系统版本: --</span>
+  </div>
+  <!-- 点击这个按钮会跳转到 ESP32 内置的升级页面 -->
+  <button class='btn-auto' onclick="window.location.href='/ota'" style='background:#ef4444;'>
+    🚀 升级固件 (WiFi OTA)
+  </button>
+
+  <!-- 放在 系统设置 卡片里的 OTA-6  按钮下面 -->
+  <div style="margin-top: 20px; border-top: 1px solid #374151; padding-top: 15px;">
+    <h3 style="font-size: 14px; color: #93c5fd; margin-bottom: 10px;">网页文件在线更新</h3>
+    <form method="POST" action="/fsupdate" enctype="multipart/form-data" style="text-align:center;">
+      <input type="file" name="fsFile" multiple required style="margin: 10px 0; color: #d1d5db;"><br>
+      <span style="font-size: 12px; color: #9ca3af;">(按住 Ctrl 键可同时选中 index.html 和 script.js)</span><br>
+      <button type="submit" class="btn-auto" style="background:#3b82f6; margin-top: 10px;">
+        ⚡ 更新网页文件 (免插线)
+      </button>
+    </form>
+  </div> 
+
+</div>
+
+
+<!-- 隐藏的开发者工具箱 -->
+<div class="card" style="display:none;" id="devTools">
+  <h2>👨‍💻 开发者工具</h2>
+  <p style="font-size: 13px; color: #9ca3af;">无需 USB，直接在线更新网页文件。</p>
+  
+  <form method="POST" action="/fsupdate" enctype="multipart/form-data">
+    <label style="font-size: 14px;">更新网页文件 (.html/.js/.css)</label><br>
+    <!-- 注意：不要使用 multiple，一次只传一个文件最稳 -->
+    <input type="file" name="fsFile" required style="margin: 10px 0;"><br>
+    <span style="font-size: 12px; color: #9ca3af;">(建议一次只选一个文件上传)</span><br>
+    <button type="submit" class="btn-auto" style="background:#3b82f6; margin-top:5px;">开始更新网页</button>
+  </form>
+</div>
+
+</body>
+</html>

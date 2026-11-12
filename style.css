@@ -1,0 +1,57 @@
+body{font-family:-apple-system,sans-serif;background:#111827;color:#e5e7eb;padding:20px;max-width:520px;margin:auto;}
+h1{font-size:20px;text-align:center;color:#10b981;margin:10px 0 20px;}
+.card{background:#1f2937;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #0004;}
+.card h2{font-size:15px;color:#93c5fd;margin:0 0 10px;}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #374151;}
+.row:last-child{border:0;}
+.big-temp{font-size:42px;font-weight:700;text-align:center;color:#fbbf24;margin:10px 0;}
+.big-desc{text-align:center;font-size:16px;margin-bottom:10px;}
+.score{font-size:48px;font-weight:800;text-align:center;margin:8px 0;}
+.level{display:inline-block;padding:4px 12px;border-radius:20px;font-size:14px;font-weight:600;margin:0 auto 8px;display:table;}
+.stock-price{font-size:42px;font-weight:800;margin:8px 0;}
+.up{color:#ef4444;}
+.down{color:#10b981;}
+.flat{color:#9ca3af;}
+.slider-row{display:flex;align-items:center;gap:8px;margin:6px 0;}
+input[type=range]{flex:1;}
+.presets{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
+.preset{height:38px;border-radius:8px;border:2px solid transparent;cursor:pointer;}
+.tip{color:#9ca3af;font-size:13px;text-align:center;margin-top:8px;}
+.select-box{width:100%;padding:10px;border-radius:8px;background:#374151;color:#fff;border:1px solid #4b5563;font-size:16px;margin-bottom:8px;}
+.btn-auto{width:100%;padding:12px;background:#10b981;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:10px;}
+
+/* --- 原有样式保留，追加以下样式 --- */
+
+/* 线图工具栏样式 */
+.chart-toolbar {
+  padding: 8px;
+  background: #374151;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-radius: 8px 8px 0 0; /* 顶部圆角 */
+}
+.btn-chart {
+  background: #4b5563;
+  color: #d1d5db;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-chart:hover { background: #6b7280; color: white; }
+.btn-chart.active { background: #10b981; color: white; font-weight: bold; }
+.divider { border-left: 1px solid #6b7280; height: 16px; margin: 0 4px; }
+
+/* 强制 KLineChart 适配暗色主题 */
+#pro-kline-container {
+  --klinecharts-bg-color: #1f2937;
+  --klinecharts-text-color: #9ca3af;
+  --klinecharts-grid-color: #374151;
+  --klinecharts-candle-up-color: #ef4444;
+  --klinecharts-candle-down-color: #10b981;
+  --klinecharts-candle-no-change-color: #9ca3af;
+}
